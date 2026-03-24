@@ -43,8 +43,9 @@
 <div id="password-gate">
   <div class="gate-box">
     <h2>盐城选岗推荐系统</h2>
-    <p>请输入访问密码</p>
-    <input type="password" id="gate-input" placeholder="••••••••" maxlength="32"
+    <p>请输入管理员提供的访问码</p>
+    <input type="text" id="gate-input" placeholder="8位访问码" maxlength="8"
+           style="text-transform:lowercase;letter-spacing:4px;font-size:1.3rem;text-align:center;"
            onkeydown="if(event.key==='Enter') checkPassword()" />
     <button onclick="checkPassword()">进入系统</button>
     <div class="error" id="gate-error"></div>
@@ -158,14 +159,17 @@
 </div>
 
 <script>
-// ── 密码验证逻辑 ──────────────────────────────────
+// ── 一次性访问码验证 ──────────────────────────────
+// 原理：管理员用 admin.html 生成当天 8 位码，分享给客户
+// 访问码 = SHA-256(master_secret + 'YYYY-MM-DD') 前 8 位，当天有效
 const SESSION_KEY = 'yc_auth';
-// 动态从 password.js 加载哈希（no-store 绕过 CDN 缓存）
-// 修改密码只需更新 data/password.js 里的哈希值即可
-let _pwdHash = '';
+let _secret = '';
 fetch('data/password.js', {cache: 'no-store'})
   .then(r => r.text())
-  .then(t => { const m = t.match(/"([a-f0-9]{64})"/); if (m) _pwdHash = m[1]; });
+  .then(t => {
+    const m = t.match(/ACCESS_MASTER_SECRET\s*=\s*"([^"]+)"/);
+    if (m) _secret = m[1];
+  });
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -173,22 +177,22 @@ async function sha256(str) {
 }
 
 async function checkPassword() {
-  const input = document.getElementById('gate-input').value.trim();
+  const input = document.getElementById('gate-input').value.trim().toLowerCase();
   const err   = document.getElementById('gate-error');
-  if (!input) { err.textContent = '请输入密码'; return; }
-  if (!_pwdHash) { err.textContent = '配置加载中，请稍后重试'; return; }
-  const hash = await sha256(input);
-  if (hash === _pwdHash) {
+  if (!input) { err.textContent = '请输入访问码'; return; }
+  if (!_secret) { err.textContent = '加载中，请稍后再试'; return; }
+  const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+  const todayToken = (await sha256(_secret + today)).slice(0, 8);
+  if (input === todayToken) {
     sessionStorage.setItem(SESSION_KEY, '1');
     document.getElementById('password-gate').style.display = 'none';
   } else {
-    err.textContent = '密码错误，请重试';
+    err.textContent = '访问码无效或已过期，请联系管理员重新获取';
     document.getElementById('gate-input').value = '';
     document.getElementById('gate-input').focus();
   }
 }
 
-// 已认证则直接跳过
 if (sessionStorage.getItem(SESSION_KEY) === '1') {
   document.getElementById('password-gate').style.display = 'none';
 }
