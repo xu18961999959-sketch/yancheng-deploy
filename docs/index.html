@@ -159,10 +159,13 @@
 
 <script>
 // ── 密码验证逻辑 ──────────────────────────────────
-// 修改密码：把新密码的 SHA-256 哈希替换这里即可
-// 计算工具：https://emn178.github.io/online-tools/sha256.html
-const ACCESS_PASSWORD_HASH = "27f651bf23ceeb84506f43c1dd28c239b8d4df15515f6e7619cc67fbb133c28c";
 const SESSION_KEY = 'yc_auth';
+// 动态从 password.js 加载哈希（no-store 绕过 CDN 缓存）
+// 修改密码只需更新 data/password.js 里的哈希值即可
+let _pwdHash = '';
+fetch('data/password.js', {cache: 'no-store'})
+  .then(r => r.text())
+  .then(t => { const m = t.match(/"([a-f0-9]{64})"/); if (m) _pwdHash = m[1]; });
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -173,8 +176,9 @@ async function checkPassword() {
   const input = document.getElementById('gate-input').value.trim();
   const err   = document.getElementById('gate-error');
   if (!input) { err.textContent = '请输入密码'; return; }
+  if (!_pwdHash) { err.textContent = '配置加载中，请稍后重试'; return; }
   const hash = await sha256(input);
-  if (hash === ACCESS_PASSWORD_HASH) {
+  if (hash === _pwdHash) {
     sessionStorage.setItem(SESSION_KEY, '1');
     document.getElementById('password-gate').style.display = 'none';
   } else {
