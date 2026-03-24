@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>访问码生成器 - 管理员专用</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  background: #0f1629;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.card {
+  background: #1a2240;
+  border-radius: 16px;
+  padding: 40px;
+  width: 480px;
+  max-width: 100%;
+  color: #e0e8ff;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+h1 { font-size: 1.3rem; color: #7eb8ff; margin-bottom: 4px; }
+.sub { color: #8899bb; font-size: 0.85rem; margin-bottom: 32px; }
+
+.field { margin-bottom: 20px; }
+label { display: block; font-size: 0.8rem; color: #8899bb; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+input {
+  width: 100%; padding: 10px 14px; background: #0f1629; border: 1px solid #2a3a5c;
+  border-radius: 8px; color: #e0e8ff; font-size: 0.95rem; outline: none;
+}
+input:focus { border-color: #7eb8ff; }
+button {
+  width: 100%; padding: 13px; background: #2563eb; color: #fff;
+  border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: background .2s;
+}
+button:hover { background: #1d4ed8; }
+
+.tokens { margin-top: 28px; display: none; }
+.tokens h2 { font-size: 0.9rem; color: #8899bb; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.token-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: #0f1629; border-radius: 8px; margin-bottom: 8px;
+  border: 1px solid #2a3a5c;
+}
+.token-row.today { border-color: #2563eb; background: #0d1a3a; }
+.token-row.today .date-label { color: #7eb8ff; font-weight: 600; }
+.date-label { color: #8899bb; font-size: 0.9rem; }
+.code {
+  font-family: monospace; font-size: 1.5rem; letter-spacing: 4px;
+  color: #fff; background: #1a2240; padding: 4px 12px; border-radius: 6px;
+  cursor: pointer; user-select: all;
+}
+.token-row.today .code { color: #7eb8ff; }
+.copy-hint { font-size: 0.7rem; color: #8899bb; margin-top: 4px; text-align: center; }
+.copied { color: #4ade80 !important; }
+.note {
+  margin-top: 20px; padding: 12px 16px; background: #1a2240;
+  border-left: 3px solid #f59e0b; border-radius: 4px;
+  font-size: 0.8rem; color: #d4af72; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>访问码生成器</h1>
+  <p class="sub">管理员专用 · 请勿分享此页面</p>
+
+  <div class="field">
+    <label>Master Secret（来自 data/password.js）</label>
+    <input type="password" id="secret" placeholder="粘贴 ACCESS_MASTER_SECRET 的值" />
+  </div>
+  <button onclick="generate()">生成本周访问码</button>
+
+  <div class="tokens" id="result">
+    <h2>本周访问码（点击复制）</h2>
+    <div id="token-list"></div>
+    <p class="copy-hint" id="copy-hint"></p>
+    <div class="note">
+      每个访问码仅当天有效，当天可重复使用（同一客户多次进入）。<br>
+      次日自动失效，需重新生成新码发给客户。
+    </div>
+  </div>
+</div>
+
+<script>
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function generate() {
+  const secret = document.getElementById('secret').value.trim();
+  if (!secret) { alert('请输入 Master Secret'); return; }
+
+  const list  = document.getElementById('token-list');
+  const today = new Date().toLocaleDateString('sv-SE');
+  list.innerHTML = '';
+
+  const days = ['日','一','二','三','四','五','六'];
+  for (let i = 0; i < 7; i++) {
+    const d    = new Date();
+    d.setDate(d.getDate() + i);
+    const dateStr  = d.toLocaleDateString('sv-SE');
+    const weekday  = days[d.getDay()];
+    const token    = (await sha256(secret + dateStr)).slice(0, 8);
+    const isToday  = (dateStr === today);
+
+    const row = document.createElement('div');
+    row.className = 'token-row' + (isToday ? ' today' : '');
+    row.innerHTML = `
+      <span class="date-label">${dateStr} 周${weekday}${isToday ? ' 【今天】' : ''}</span>
+      <span class="code" onclick="copyCode(this, '${token}')">${token}</span>
+    `;
+    list.appendChild(row);
+  }
+
+  document.getElementById('result').style.display = 'block';
+}
+
+function copyCode(el, code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const hint = document.getElementById('copy-hint');
+    hint.textContent = `已复制：${code}`;
+    hint.className = 'copy-hint copied';
+    setTimeout(() => { hint.textContent = ''; hint.className = 'copy-hint'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
