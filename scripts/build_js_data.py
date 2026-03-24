@@ -12,7 +12,7 @@ import os
 
 ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
-WEB_DATA = os.path.join(ROOT, "webapp", "data")
+WEB_DATA = os.path.join(ROOT, "docs", "data")
 os.makedirs(WEB_DATA, exist_ok=True)
 
 
