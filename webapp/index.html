@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盐城事业编选岗推荐系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-inner">
+      <div class="loading-spinner"></div>
+      <h2>盐城事业编选岗推荐系统</h2>
+      <p class="loading-text">正在加载数据...</p>
+    </div>
+  </div>
+
+  <!-- Input Form -->
+  <div id="form-section" class="form-section" style="display:none;">
+    <div class="form-hero">
+      <div class="form-hero-inner">
+        <div class="hero-badge">盐城事业编 &middot; 选岗推荐</div>
+        <h1>盐城事业编选岗推荐系统</h1>
+        <p class="hero-desc">基于2023-2026年2364个岗位数据 + 409个单位竞争比 + 单招信息库<br>输入你的条件，一键生成个性化选岗报告</p>
+      </div>
+    </div>
+    <div class="form-container">
+      <div class="form-card">
+        <div class="form-title">
+          <span class="form-icon">&#128203;</span>
+          <h2>填写你的基本条件</h2>
+        </div>
+        <p class="form-hint">带 <span class="required-star">*</span> 为必填项，其余选填（选填项有默认值）</p>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>学历 <span class="required-star">*</span></label>
+            <select id="input-edu" required>
+              <option value="">请选择</option>
+              <option value="大专">大专</option>
+              <option value="本科" selected>本科</option>
+              <option value="硕士研究生">硕士研究生</option>
+              <option value="博士研究生">博士研究生</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>专业 <span class="required-star">*</span></label>
+            <input type="text" id="input-major" placeholder="如：会计学、计算机科学与技术" list="major-suggestions" required>
+            <datalist id="major-suggestions"></datalist>
+          </div>
+          <div class="form-group">
+            <label>毕业年份</label>
+            <select id="input-grad-year">
+              <option value="2023">2023年</option>
+              <option value="2024">2024年</option>
+              <option value="2025">2025年</option>
+              <option value="2026" selected>2026年</option>
+              <option value="2020">2020年及以前</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>意向区域</label>
+            <select id="input-area">
+              <option value="不限" selected>不限（全区域）</option>
+              <option value="市区">市区（亭湖/盐都/经开区）</option>
+              <option value="东台">东台</option>
+              <option value="建湖">建湖</option>
+              <option value="射阳">射阳</option>
+              <option value="阜宁">阜宁</option>
+              <option value="滨海">滨海</option>
+              <option value="响水">响水</option>
+              <option value="大丰">大丰</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>政治面貌</label>
+            <select id="input-party">
+              <option value="群众" selected>群众</option>
+              <option value="党员">中共党员</option>
+              <option value="团员">共青团员</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>工作经验</label>
+            <select id="input-exp">
+              <option value="无" selected>无（应届生）</option>
+              <option value="1-2年">1-2年</option>
+              <option value="3年以上">3年以上</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btn-generate" class="btn-generate" onclick="generateReport()">
+          <span class="btn-icon">&#128640;</span> 一键生成选岗推荐报告
+        </button>
+        <p class="form-footer">数据来源：盐城市2023-2026年事业单位公开招聘公告 | 《江苏省2026年度考试录用公务员专业参考目录》</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Processing -->
+  <div id="processing-section" style="display:none;">
+    <div class="processing-inner">
+      <div class="loading-spinner"></div>
+      <h2>正在匹配岗位...</h2>
+      <p id="processing-text">加载岗位数据中...</p>
+    </div>
+  </div>
+
+  <!-- Report Output -->
+  <div id="report-section" style="display:none;"></div>
+</div>
+
+<script src="data/positions.js"></script>
+<script src="data/competition.js"></script>
+<script src="data/categories.js"></script>
+<script src="data/recruitment.js"></script>
+<script src="data/soe.js"></script>
+<script src="data/majors_list.js"></script>
+<script src="matcher.js"></script>
+<script src="report.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
