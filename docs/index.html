@@ -6,8 +6,51 @@
 <title>盐城事业编选岗推荐系统</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+#password-gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #1a1f35 0%, #2d3561 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+#password-gate .gate-box {
+  background: #fff; border-radius: 16px; padding: 48px 40px;
+  width: 360px; max-width: 90vw; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+#password-gate h2 { margin: 0 0 8px; font-size: 1.4rem; color: #1a1f35; }
+#password-gate p  { margin: 0 0 28px; color: #666; font-size: 0.9rem; }
+#password-gate input {
+  width: 100%; padding: 12px 16px; font-size: 1rem;
+  border: 2px solid #e0e0e0; border-radius: 8px; outline: none;
+  box-sizing: border-box; margin-bottom: 16px; letter-spacing: 2px;
+  transition: border-color .2s;
+}
+#password-gate input:focus { border-color: #2d3561; }
+#password-gate button {
+  width: 100%; padding: 13px; font-size: 1rem; font-weight: 600;
+  background: #2d3561; color: #fff; border: none; border-radius: 8px;
+  cursor: pointer; transition: background .2s;
+}
+#password-gate button:hover { background: #1a1f35; }
+#password-gate .error {
+  color: #e53935; font-size: 0.85rem; margin-top: 10px; min-height: 20px;
+}
+</style>
 </head>
 <body>
+
+<!-- 访问密码门 -->
+<div id="password-gate">
+  <div class="gate-box">
+    <h2>盐城选岗推荐系统</h2>
+    <p>请输入访问密码</p>
+    <input type="password" id="gate-input" placeholder="••••••••" maxlength="32"
+           onkeydown="if(event.key==='Enter') checkPassword()" />
+    <button onclick="checkPassword()">进入系统</button>
+    <div class="error" id="gate-error"></div>
+  </div>
+</div>
+
 <div id="app">
   <!-- Loading Screen -->
   <div id="loading-screen" class="loading-screen">
@@ -114,6 +157,37 @@
   <div id="report-section" style="display:none;"></div>
 </div>
 
+<script src="data/password.js"></script>
+<script>
+// ── 密码验证逻辑 ──────────────────────────────────
+const SESSION_KEY = 'yc_auth';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword() {
+  const input = document.getElementById('gate-input').value.trim();
+  const err   = document.getElementById('gate-error');
+  if (!input) { err.textContent = '请输入密码'; return; }
+  const hash = await sha256(input);
+  if (hash === ACCESS_PASSWORD_HASH) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('password-gate').style.display = 'none';
+  } else {
+    err.textContent = '密码错误，请重试';
+    document.getElementById('gate-input').value = '';
+    document.getElementById('gate-input').focus();
+  }
+}
+
+// 已认证则直接跳过
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+  document.getElementById('password-gate').style.display = 'none';
+}
+// ─────────────────────────────────────────────────
+</script>
 <script src="data/positions.js"></script>
 <script src="data/competition.js"></script>
 <script src="data/categories.js"></script>
