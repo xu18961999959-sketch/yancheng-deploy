@@ -157,9 +157,11 @@
   <div id="report-section" style="display:none;"></div>
 </div>
 
-<script src="data/password.js"></script>
 <script>
 // ── 密码验证逻辑 ──────────────────────────────────
+// 修改密码：把新密码的 SHA-256 哈希替换这里即可
+// 计算工具：https://emn178.github.io/online-tools/sha256.html
+const ACCESS_PASSWORD_HASH = "27f651bf23ceeb84506f43c1dd28c239b8d4df15515f6e7619cc67fbb133c28c";
 const SESSION_KEY = 'yc_auth';
 
 async function sha256(str) {
